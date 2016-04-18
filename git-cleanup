@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# NAME
+#   git-cleanup  -- clean up dead branches
+#
+
+git fetch origin
+git remote prune origin
+git branch --merged master | grep -v master | tee | xargs git branch -D

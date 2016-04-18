@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# NAME
+#    git update -- pull down updates to master.
+#
+
+git checkout master
+git pull
