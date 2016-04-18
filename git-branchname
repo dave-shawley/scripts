@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# NAME
+#    git branchname -- Display the current branch name.
+#
+# vim: set ts=2 sw=2 sts=2 et:
+
+set -o errexit
+
+root=$(git rev-parse --show-toplevel)
+if ! grep -q ^ref $root/.git/HEAD
+then
+  echo "You seem to be checked out to a specific commit." >&2 >/dev/null
+  echo "Cannot determine the branch, so I'm using master." >&2 >/dev/null
+  branch=master
+else
+  branch=$(cut -d ' ' -f 2 $root/.git/HEAD | awk -F/ '{print $NF}')
+fi
+echo $branch
