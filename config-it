@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# NAME
+#    config-it -- Generate config-me.
+# 
+# DESCRIPTION
+#    This script generates a helper script for running a GNU
+#    AutoConf style configuration script.  Then it opens the
+#    helper and the output of ``./configure --help'' in vim.
+#
+# vim: set ts=2 sw=2 sts=2 et:
+
+if test ! -x ./configure
+then
+  echo "configure script missing."
+  exit 66
+fi
+
+cat >config-me<<EOF
+#!/bin/sh
+export CC=${CC:-clang}
+export CXX=${CXX:-clang++}
+export CPPFLAGS=-I$HOME/opt/include $CPPFLAGS
+export LDFLAGS=-L$HOME/opt/lib $LDFLAGS
+./configure \\
+    --prefix=$HOME/opt \\
+2>&1 | tee config-log
+EOF
+chmod u+x config-me
+./configure --help > config-help
+vim -o config-help config-me
