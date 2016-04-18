@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# NAME
+#    pip-clean -- Uninstall all of the things from pip.
+#
+# vim: set ts=2 sw=2 sts=2 et:
+
+if test -e ./env/bin/pip
+then
+  pip=./env/bin/pip
+  python=./env/bin/python
+else
+  pip=$(which pip)
+  python=$(which python)
+fi
+echo "Using $python and $pip"
+
+if test -e setup.py
+then
+  $pip uninstall -qy $(python setup.py --name) 2>/dev/null
+fi
+$pip freeze | sed -e '/^-e/d' -e 's/==.*//' | xargs $pip uninstall -y
