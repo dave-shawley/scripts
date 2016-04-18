@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# NAME
+#    git hub pr -- Create a pull request for the current branch.
+#
+# vim: set ts=2 sw=2 sts=2 et:
+
+set -o errexit
+
+url="$(git hub url)/compare/master"
+branch=$(git branchname)
+if test "$branch" != "master"
+then
+  url="$url...$branch"
+fi
+open "$url"

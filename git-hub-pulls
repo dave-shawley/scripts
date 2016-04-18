@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# NAME
+#    git hub pulls -- Show PRs for the repository.
+#
+# vim: set ts=2 sw=2 sts=2 et:
+
+set -o errexit
+
+open "$(git hub url)/pulls"

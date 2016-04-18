@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# NAME
+#    git hub url -- return the URL for origin.
+#
+# vim: set ts=2 sw=2 sts=2 et:
+
+set -o errexit
+
+git remote show origin \
+  | awk '/Push *URL/ {print $NF}' \
+  | sed -e 's/\.git//' -e 's#git@\([^:]*\):\(.*\)$#https://\1/\2#'

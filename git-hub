@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# NAME
+#    git hub -- Git subcommand for working with GitHub.
+#
+# DESCRIPTION
+#    Executes sub-commands that are simply shell scripts that
+#    live in the same directory and have names that start with
+#    ``git-hub-''.
+#
+# vim: set ts=2 sts=2 sw=2 et:
+
+command=$1
+shift
+
+set -o errexit
+
+if test -z "$command"
+then
+  open $(git hub url)
+  exit 0
+fi
+
+if test -x "$0-$command"
+then
+  exec "$0-$command" "$@"
+fi
+
+subcommands=""
+for script in $0-*
+do
+  subcommands="$subcommands ${script##$0-}"
+done
+echo "Valid subcommands: $subcommands"
+exit 64
