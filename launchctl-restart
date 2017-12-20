@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+
+name=$1
+rcfile=$HOME/Library/LaunchAgents/$name.plist
+if test -z "$name" -o ! -e $rcfile
+then
+	echo "Usage: $0 NAME"
+	echo ""
+	echo "NAME is the name of a registered launch agent."
+	echo ""
+	ls $HOME/Library/LaunchAgents/*.plist
+	echo ""
+	exit 1
+fi
+
+label=$(sed -ne 's#^.*<key>Label</key><string>\(.*\)</string>.*$#\1#p' $rcfile)
+set -x
+launchctl stop $label
+launchctl unload $rcfile
+launchctl load $rcfile
+launchctl start $label

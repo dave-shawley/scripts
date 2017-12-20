@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+#
+# Super simple implementation of statsd.
+#
+
+import asyncio
+import sys
+
+
+if __name__ != '__main__':
+    raise ImportError('DAMMIT JIM, I AM NOT A MODULE')
+
+
+counters = {}
+gauges = {}
+timers = {}
+
+
+class StatsdProtocol:
+
+    def connection_made(self, transport):
+        self.transport = transport
+
+    def datagram_received(self, data, peer):
+        message = data.decode()
+        if message.endswith('|ms'):
+            path, timing = message[:-3].rsplit(':', 1)
+            timers.setdefault(path, {'count': 0, 'total': 0})
+            timers[path]['count'] += 1
+            timers[path]['total'] += float(timing)
+            timers[path]['max'] = max(timers[path].get('max', 0.0),
+                                      float(timing))
+        elif message.endswith('|c'):
+            path, counter = message[:-2].rsplit(':', 1)
+            counters.setdefault(path, 0)
+            counters[path] += int(counter)
+        elif message.endswith('|g'):
+            path, value = message[:-2].rsplit(':', 1)
+            if value.startswith(('-', '+')):
+                value = int(value)
+                gauges.setdefault(path, 0)
+                gauges[path] += value
+            else:
+                gauges[path] = value
+        print(message)
+
+
+def statsd_console(input_stream, loop):
+    command = input_stream.readline().strip().upper()
+    if command in ('EXIT', 'Q', 'QUIT'):
+        loop.stop()
+    elif command == 'COUNTERS':
+        if not counters:
+            print('! no counters recorded yet')
+        for path, value in counters.items():
+            print('>', path, value)
+    elif command == 'TIMERS':
+        if not timers:
+            print('! no timers recorded yet')
+        for path, timer_info in timers.items():
+            print('>', path, 'avg', timer_info['total'] / timer_info['count'],
+                  'max', timer_info['max'], 'hits', timer_info['count'])
+    elif command == 'GAUGES':
+        if not gauges:
+            print('! no gauges recorded yet')
+        for path, value in gauges.items():
+            print('>', path, value)
+    elif command == 'RESET':
+        timers.clear()
+        counters.clear()
+        gauges.clear()
+    else:
+        print()
+        print('Available commands')
+        print('')
+        print('COUNTERS  show the current counters')
+        print('TIMERS    show the current timers with averages')
+        print('GAUGES    show the current gauges and values')
+        print('RESET     reset tracked metrics')
+        print('EXIT      exit the daemon')
+        print()
+
+
+loop = asyncio.get_event_loop()
+listen_coro = loop.create_datagram_endpoint(StatsdProtocol,
+                                            local_addr=('0.0.0.0', 8125))
+transport, protocol = loop.run_until_complete(listen_coro)
+reader = loop.add_reader(sys.stdin.fileno(), statsd_console, sys.stdin, loop)
+
+try:
+    loop.run_forever()
+except KeyboardInterrupt:
+    pass
+
+transport.close()
+loop.close()

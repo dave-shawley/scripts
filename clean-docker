@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# NAME
+#    clean-docker -- nuke current docker things
+# 
+# DESCRIPTION
+#    `clean-docker' stops currently running containers, removes all containers,
+#    and unmounts available volumes.
+#
+# vim:set ts=2 sw=2 sts=2 et:
+
+echo "Stopping docker containers..."
+(docker ps -q | xargs docker stop) | sed 's/^/    /'
+
+echo "Removing docker containers..."
+(docker ps -qa | xargs docker rm -f) | sed 's/^/    /'
+
+echo "Removing docker volumes..."
+(docker volume ls -q | xargs docker volume rm) | sed 's/^/    /'
+
+echo "Removing docker networks..."
+(docker network ls \
+ | awk '($2 != "bridge" && $2 != "host" && $2 != "none" && $1 != "NETWORK") {print $1}' \
+ | xargs docker network rm) | sed 's/^/    /'
