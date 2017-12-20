@@ -3,7 +3,11 @@
 # NAME
 #   git-cleanup  -- clean up dead branches
 #
+# SYNOPSIS
+#   git cleanup [REMOTE]
+#
 
-git fetch origin
-git remote prune origin
+remote=${1:-origin}
+git fetch $remote
+git remote prune $remote
 git branch --merged master | grep -v master | tee | xargs git branch -D
