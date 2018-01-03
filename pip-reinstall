@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# vim: set ts=2 sw=2 sts=2 et:
+
+test -n "$SHELLDEBUG" && set -x
+req_file=$1
+if test -z "$req_file"
+then
+  for req in development testing install
+  do
+    if test -e "requires/$req.txt"
+    then
+      req_file="requires/$req.txt"
+      break
+    fi
+  done
+  if test -z "$req_file"
+  then
+    echo "ERROR: cannot find a requirements file to install from."
+    exit 1
+  fi
+fi
+
+if test -e env/bin/activate
+then
+  . ./env/bin/activate
+fi
+pip freeze 2>/dev/null | sed 's/==.*$//; /^-e/d' | xargs pip uninstall -qy
+pip install -r "$req_file"
