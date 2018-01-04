@@ -1,16 +1,35 @@
 #!/bin/sh
 #
 # NAME
-#    git hub pr -- Create a pull request for the current branch.
+#    git hub pr -- Create or pull PRs
+#
+# SYNOPSIS
+#    git hub pr       # create a new PR
+#    git hub pr 1234  # fetch PR#1234 into a local branch
 #
 # vim: set ts=2 sw=2 sts=2 et:
 
 set -o errexit
+test -n "$SHELLDEBUG" && set -x
 
-url="$(git hub url)/compare/master"
-branch=$(git branchname)
-if test "$branch" != "master"
+if test -z "$1"
 then
-  url="$url...$branch"
+  # create a new PR against origin
+  url="$(git hub url)/compare/master"
+  branch=$(git branchname)
+  if test "$branch" != "master"
+  then
+    url="$url...$branch"
+  fi
+  open "$url"
+else
+  # fetch a PR from either upstream or origin
+  if git remote | grep -q upstream
+  then
+    git fetch upstream pull/$1/head:prs/$1
+  else
+    git fetch origin pull/$1/head:prs/$1
+  fi
+  git stash
+  git checkout prs/$1
 fi
-open "$url"
