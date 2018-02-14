@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# vim: set ts=2 sw=2 sts=2:
+
+tmpfile=`mktemp -q /tmp/log-config-XXXXX`
+if test $? -ne 0
+then
+  echo "$0: failed to create temp file, dying."
+	exit 1
+fi
+trap "rm -f $tmpfile" 0
+
+cat >>$tmpfile<<EOF
+[loggers]
+keys=root
+
+[handlers]
+keys=console
+
+[formatters]
+keys=readable
+
+[logger_root]
+level=DEBUG
+handlers=console
+
+[handler_console]
+class=StreamHandler
+level=DEBUG
+formatter=readable
+args=(sys.stderr,)
+
+[formatter_readable]
+format=%(asctime)s %(levelname)1.1s - %(name)s: %(message)s
+EOF
+
+nosetests -v --logging-config=$tmpfile $* 2>&1 | tee nosetests.log
